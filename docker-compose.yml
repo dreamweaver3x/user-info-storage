@@ -1,0 +1,31 @@
+version: "3"
+
+services:
+  postgres:
+    container_name: users_pg_db
+    image: postgres
+    environment:
+      POSTGRES_DB: "users"
+      POSTGRES_USER: "db_user"
+      POSTGRES_PASSWORD: "pwd123"
+    volumes:
+      - pg:/var/lib/pg
+    ports:
+      - 5432:5432
+
+  server:
+    container_name: users_server
+    build: .
+    networks:
+      - default
+    depends_on:
+      - postgres
+    restart: on-failure
+    environment:
+      APP_NAME: "users_server"
+      PORT: "9090"
+      DB_DSN: "host=postgres user=db_user password=pwd123 dbname=users port=5432 sslmode=disable"
+    ports:
+      - 9090:9090
+volumes:
+  pg:
