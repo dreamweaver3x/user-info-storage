@@ -22,20 +22,56 @@ func (a *Application) Start(port string) {
 
 	u := e.Group("/users")
 	u.GET("/", a.GetUserInfo)
-	u.POST("/", a.AddUsersInfo)
+	u.POST("/", a.AddUser)
+	u.POST("/comments", a.AddComments)
+	u.POST("/likes", a.AddLikes)
 
 	e.Logger.Fatal(e.Start(port))
 }
 
-func (a *Application) AddUsersInfo(c echo.Context) error {
-	var users *[]models.User
+func (a *Application) AddUser(c echo.Context) error {
+	user := new(models.User)
 
-	if err := c.Bind(users); err != nil {
+	if err := c.Bind(user); err != nil {
 		log.Println(err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	err := a.repo.AddUsers(users)
+	err := a.repo.AddUser(user)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		log.Println(err)
+		log.Println("1")
+	}
+
+	return c.NoContent(http.StatusCreated)
+}
+
+func (a *Application) AddLikes(c echo.Context) error {
+	user := new(models.User)
+
+	if err := c.Bind(user); err != nil {
+		log.Println(err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err := a.repo.AddLikes(user)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.NoContent(http.StatusCreated)
+}
+
+func (a *Application) AddComments(c echo.Context) error {
+	user := new(models.User)
+
+	if err := c.Bind(user); err != nil {
+		log.Println(err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err := a.repo.AddComments(user)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -44,13 +80,8 @@ func (a *Application) AddUsersInfo(c echo.Context) error {
 }
 
 func (a *Application) GetUserInfo(c echo.Context) error {
-	var users *[]models.User
 
-	if err := c.Bind(users); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	usersResponse, err := a.repo.GetUsers(users)
+	usersResponse, err := a.repo.GetUsers()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
